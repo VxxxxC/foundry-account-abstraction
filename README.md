@@ -60,7 +60,13 @@ foundry-account-abstraction/
 │   ├── DeployMinimal.s.sol          # Deployment script
 │   ├── HelperConfig.s.sol           # Network configuration helper
 │   └── SendPackedUserOp.s.sol       # UserOperation sender script
-├── test/                             # Test contracts (to be implemented)
+├── test/
+│   ├── MinimalAccountTest.t.sol             # Unit tests for MinimalAccount
+│   ├── MinimalAccountIntegrationTest.t.sol  # Integration tests with EntryPoint
+│   ├── SecurityVulnerabilityTest.t.sol      # Security vulnerability tests
+│   ├── HelperConfigTest.t.sol               # HelperConfig script tests
+│   ├── DeployMinimalTest.t.sol              # Deployment script tests
+│   └── InvariantAndEdgeCaseTest.t.sol       # Invariant and edge case tests
 ├── lib/
 │   ├── account-abstraction/         # ERC-4337 reference implementation
 │   ├── forge-std/                   # Foundry standard library
@@ -386,7 +392,7 @@ flowchart TD
 | **Missing Events** | 🟡 Low | No event emissions | Difficult to track contract activities | Add events for execute, receive ETH |
 | **Single Owner Risk** | 🟠 Medium | Ownable pattern | Loss of key = permanent loss | Add multi-sig or recovery module |
 | **No Upgradability** | 🔵 Info | Not upgradeable | Cannot fix bugs or add features | Deploy with proxy pattern |
-| **No Tests** | 🔴 High | `/test` folder empty | No test coverage | Add comprehensive unit & integration tests |
+| **HelperConfig Incomplete** | 🟠 Medium | [HelperConfig.s.sol#L49-53](script/HelperConfig.s.sol#L49) | `getOrCreateAnvilEthConfig()` returns empty config | Add missing implementation |
 
 ### Security Considerations
 
@@ -402,9 +408,34 @@ flowchart TD
 
 | Component | Unit Tests | Integration Tests | Gas Optimization | Status |
 |-----------|------------|-------------------|------------------|--------|
-| MinimalAccount | ❌ Missing | ❌ Missing | ⚠️ Not measured | 🔴 **Needs Implementation** |
-| DeployMinimal | ❌ Missing | ❌ Missing | N/A | 🔴 **Needs Implementation** |
-| HelperConfig | ❌ Missing | ❌ Missing | N/A | 🔴 **Needs Implementation** |
+| MinimalAccount | ✅ Implemented | ✅ Implemented | ⚠️ Not measured | 🟢 **Comprehensive** |
+| DeployMinimal | ✅ Implemented | ✅ Implemented | N/A | 🟢 **Complete** |
+| HelperConfig | ✅ Implemented | ✅ Implemented | N/A | 🟢 **Complete** |
+
+### Test Coverage
+
+The following test files have been added:
+
+| Test File | Description | Test Count |
+|-----------|-------------|------------|
+| [MinimalAccountTest.t.sol](test/MinimalAccountTest.t.sol) | Unit tests for MinimalAccount core functionality | 30+ tests |
+| [MinimalAccountIntegrationTest.t.sol](test/MinimalAccountIntegrationTest.t.sol) | Full ERC-4337 flow integration tests | 15+ tests |
+| [SecurityVulnerabilityTest.t.sol](test/SecurityVulnerabilityTest.t.sol) | Security-focused vulnerability tests | 20+ tests |
+| [HelperConfigTest.t.sol](test/HelperConfigTest.t.sol) | HelperConfig script tests | 10+ tests |
+| [DeployMinimalTest.t.sol](test/DeployMinimalTest.t.sol) | Deployment script tests | 5+ tests |
+| [InvariantAndEdgeCaseTest.t.sol](test/InvariantAndEdgeCaseTest.t.sol) | Invariant and edge case tests | 15+ tests |
+
+**Categories Covered:**
+- ✅ Access Control Vulnerabilities
+- ✅ Signature Validation & Malleability
+- ✅ Reentrancy Attacks
+- ✅ Gas Griefing & DoS
+- ✅ Flash Loan Attacks
+- ✅ Cross-Chain Replay
+- ✅ Integer Overflow/Underflow
+- ✅ Ownership Security
+- ✅ Edge Cases & Fuzzing
+- ✅ Invariant Testing
 
 ## Setup & Usage
 
@@ -644,7 +675,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 ### Development Roadmap
 
-- [ ] Implement comprehensive test suite
+- [x] Implement comprehensive test suite
 - [ ] Add batch execution support
 - [ ] Implement signature aggregator support
 - [ ] Add paymaster integration examples
@@ -652,10 +683,13 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 - [ ] Add zkSync native AA support
 - [ ] Implement social recovery module
 - [ ] Add spending limits module
+- [ ] Fix unchecked return value in _payPrefund
+- [ ] Fix unlimited gas allowance vulnerability
+- [ ] Complete getOrCreateAnvilEthConfig implementation
 
 ---
 
-**Last Updated**: February 2, 2026  
+**Last Updated**: February 1, 2026  
 **Built with** ❤️ **using Foundry & ERC-4337**
 
 **⚠️ Disclaimer**: This is an educational project. Do not use in production without thorough auditing and testing.
