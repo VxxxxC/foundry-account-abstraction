@@ -27,8 +27,8 @@ contract MinimalAccount is IAccount, Ownable {
         _;
     }
 
-    modifier requireFromEntryPointOwner(){
-        if(msg.sender != address(i_entryPoint) && msg.sender != owner()){
+    modifier requireFromEntryPointOwner() {
+        if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
             revert MinimalAccount__NotFromEntryPointOrOwner();
         }
         _;
@@ -44,12 +44,15 @@ contract MinimalAccount is IAccount, Ownable {
 
     // INFO: ***EXTERNAL FUNCTIONS***
 
-    function execute(address destination, uint256 value, bytes calldata functionData) external requireFromEntryPointOwner {
+    function execute(address destination, uint256 value, bytes calldata functionData)
+        external
+        requireFromEntryPointOwner
+    {
         (bool success, bytes memory result) = destination.call{value: value}(functionData);
-        if(!success){
+        if (!success) {
             revert MinimalAccount__CallFailed(result);
         }
-     }
+    }
 
     // If it is Minimal account owner, signature will be valid
     function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
