@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
 import {CommonBase} from "forge-std/Base.sol";
+import {EntryPoint} from "lib/account-abstraction/contracts/core/EntryPoint.sol";
 
 contract HelperConfig is Script {
     error HelperConfig__InvalidChainId();
@@ -52,6 +53,12 @@ contract HelperConfig is Script {
         if (localNetworkConfig.account != address(0)) {
             return localNetworkConfig;
         }
+
+        console.log("Deploying mocks...");
+        vm.startBroadcast();
+        EntryPoint entryPoint = new EntryPoint();
+        vm.stopBroadcast();
+
 
         // deploy mocks here
         return NetworkConfig({entryPoint: address(0), account: DEFAULT_WALLET});
