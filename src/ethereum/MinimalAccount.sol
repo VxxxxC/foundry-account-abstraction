@@ -13,7 +13,7 @@ import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPo
 contract MinimalAccount is IAccount, Ownable {
     // INFO: ***ERRORS***
     error MinimalAccount__NotFromEntryPoint();
-    error MinimalAccount__NotFromEntryPointOrOwner();
+    error MinimalAccount__NotFromEntryPointOwner();
     error MinimalAccount__CallFailed(bytes);
 
     // INFO: ***STATE VARIABLES***
@@ -29,7 +29,7 @@ contract MinimalAccount is IAccount, Ownable {
 
     modifier requireFromEntryPointOwner() {
         if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
-            revert MinimalAccount__NotFromEntryPointOrOwner();
+            revert MinimalAccount__NotFromEntryPointOwner();
         }
         _;
     }
