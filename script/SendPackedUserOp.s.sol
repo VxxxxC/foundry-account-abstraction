@@ -22,6 +22,8 @@ contract SendPackedUserOp is Script {
             _generateUnsignedUserOperation(callData, networkConfig.account, nonce);
 
         // INFO: 2. Get the userOpHash from EntryPoint
+        console.log("Getting userOpHash from EntryPoint at:", networkConfig.entryPoint);
+        // FIX:  networkConfig.entryPoint was address(0) in some tests, causing error
         bytes32 userOpHash = IEntryPoint(networkConfig.entryPoint).getUserOpHash(unsignedUserOp);
         bytes32 digest = userOpHash.toEthSignedMessageHash();
 
