@@ -11,6 +11,7 @@ contract HelperConfig is Script {
     struct NetworkConfig {
         address entryPoint;
         address account;
+        uint256 accountKey;
     }
 
     uint256 constant ETH_SEPOLIA_CHAIN_ID = 11155111;
@@ -18,6 +19,7 @@ contract HelperConfig is Script {
     uint256 constant LOCAL_CHAIN_ID = 31337;
     address constant BURNER_WALLET = 0x0406c906ad4214E97F80F706d4203e6d1cBF5E3E; // INFO: my metamask wallet address
     address constant DEFAULT_WALLET = CommonBase.DEFAULT_SENDER;
+    uint256 constant DEFAULT_ANVIL_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
 
     NetworkConfig public localNetworkConfig;
 
@@ -42,11 +44,19 @@ contract HelperConfig is Script {
     }
 
     function getEthSepoliaConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, account: BURNER_WALLET});
+        return NetworkConfig({
+            entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
+            account: BURNER_WALLET,
+            accountKey: 0 // NOTE: This should be set via environment variable for security
+        });
     }
 
     function getZkSyncSepoliaConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({entryPoint: address(0), account: BURNER_WALLET});
+        return NetworkConfig({
+            entryPoint: address(0),
+            account: BURNER_WALLET,
+            accountKey: 0 // NOTE: This should be set via environment variable for security
+        });
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
@@ -55,11 +65,12 @@ contract HelperConfig is Script {
         }
 
         console.log("Deploying mocks...");
-        vm.startBroadcast();
+        vm.startBroadcast(DEFAULT_ANVIL_KEY);
         EntryPoint entryPoint = new EntryPoint();
         vm.stopBroadcast();
 
-        // deploy mocks here
-        return NetworkConfig({entryPoint: address(0), account: DEFAULT_WALLET});
+        localNetworkConfig =
+            NetworkConfig({entryPoint: address(entryPoint), account: DEFAULT_WALLET, accountKey: DEFAULT_ANVIL_KEY});
+        return localNetworkConfig;
     }
 }

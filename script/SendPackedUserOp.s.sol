@@ -22,13 +22,11 @@ contract SendPackedUserOp is Script {
             _generateUnsignedUserOperation(callData, networkConfig.account, nonce);
 
         // INFO: 2. Get the userOpHash from EntryPoint
-        console.log("Getting userOpHash from EntryPoint at:", networkConfig.entryPoint);
-        // FIX:  networkConfig.entryPoint was address(0) in some tests, causing error
         bytes32 userOpHash = IEntryPoint(networkConfig.entryPoint).getUserOpHash(unsignedUserOp);
         bytes32 digest = userOpHash.toEthSignedMessageHash();
 
         // INFO: 3. Sign the userOpHash
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(networkConfig.account, digest);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(networkConfig.accountKey, digest);
         unsignedUserOp.signature = abi.encodePacked(r, s, v); // WARN: beware the order of r, s, v
         return unsignedUserOp;
     }
