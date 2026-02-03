@@ -59,7 +59,6 @@ contract HelperConfig is Script {
         EntryPoint entryPoint = new EntryPoint();
         vm.stopBroadcast();
 
-
         // deploy mocks here
         return NetworkConfig({entryPoint: address(0), account: DEFAULT_WALLET});
     }

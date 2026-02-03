@@ -2,13 +2,16 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
-import {MinimalAccount} from "../src/ethereum/MinimalAccount.sol";
+import {MinimalAccount, IEntryPoint, MessageHashUtils} from "../src/ethereum/MinimalAccount.sol";
 import {DeployMinimal} from "../script/DeployMinimal.s.sol";
 import {HelperConfig} from "../script/HelperConfig.s.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {SendPackedUserOp, PackedUserOperation} from "../script/SendPackedUserOp.s.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract MinimalAccountTest is Test {
+    using MessageHashUtils for bytes32;
+
     HelperConfig helperConfig;
     MinimalAccount minimalAccount;
     ERC20Mock usdc;
@@ -25,11 +28,6 @@ contract MinimalAccountTest is Test {
         sendPackedUserOp = new SendPackedUserOp();
     }
 
-    // USDC Mint
-    // msg.sender -> MinimalAccount
-    // approve some amount
-    // USDC contract
-    // come from entryPoint
     function testOwnerCanExecuteCommands() public {
         // arrange
         assertEq(usdc.balanceOf(address(minimalAccount)), 0);
@@ -62,12 +60,18 @@ contract MinimalAccountTest is Test {
         address destination = address(usdc);
         bytes memory functionData = abi.encodeWithSelector(ERC20Mock.mint.selector, address(minimalAccount), AMOUNT);
 
-        bytes memory executeCallData = abi.encodeWithSelector(MinimalAccount.execute.selector, destination, value, functionData);
-        PackedUserOperation memory packedUserOp = sendPackedUserOp.generateSignedUserOperation(executeCallData, helperConfig.getConfig());
+        bytes memory executeCallData =
+            abi.encodeWithSelector(MinimalAccount.execute.selector, destination, value, functionData);
+        PackedUserOperation memory packedUserOp =
+            sendPackedUserOp.generateSignedUserOperation(executeCallData, helperConfig.getConfig());
+        bytes32 userOpHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
+
         // act
+        address actualSigner = ECDSA.recover(userOpHash.toEthSignedMessageHash(), packedUserOp.signature);
 
         // assert
+        assertEq(actualSigner, minimalAccount.owner());
     }
 
-    function testValidationOfUserOp() public {}
+    // function testValidationOfUserOp() public {}
 }
