@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {CommonBase} from "lib/forge-std/src/Base.sol";
+import {CommonBase} from "forge-std/Base.sol";
 
 contract HelperConfig is Script {
     error HelperConfig__InvalidChainId();
@@ -31,7 +31,6 @@ contract HelperConfig is Script {
     }
 
     function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
-        console.log("chain : ", chainId);
         if (chainId == LOCAL_CHAIN_ID) {
             return getOrCreateAnvilEthConfig();
         } else if (networkConfigs[chainId].account != address(0)) {

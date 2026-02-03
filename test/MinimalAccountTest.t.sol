@@ -8,14 +8,14 @@ import {HelperConfig} from "../script/HelperConfig.s.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
 contract MinimalAccountTest is Test {
-    HelperConfig helpConfig;
+    HelperConfig helperConfig;
     MinimalAccount minimalAccount;
     ERC20Mock usdc;
     uint256 constant AMOUNT = 1e18;
 
     function setUp() public {
         DeployMinimal deployMinimal = new DeployMinimal();
-        (helpConfig, minimalAccount) = deployMinimal.deployMinimalAccount();
+        (helperConfig, minimalAccount) = deployMinimal.deployMinimalAccount();
         usdc = new ERC20Mock();
     }
 
