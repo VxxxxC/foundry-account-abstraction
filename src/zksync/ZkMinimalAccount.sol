@@ -18,8 +18,8 @@ contract ZkMinimalAccount is IAccount, Ownable {
     error ZkMinimalAccount__NotFromBootLoader();
 
     // COL: MODIFIERS
-    modifier requireFromBootLoader(){
-        if(msg.sender != BOOTLOADER_FORMAL_ADDRESS){
+    modifier requireFromBootLoader() {
+        if (msg.sender != BOOTLOADER_FORMAL_ADDRESS) {
             revert ZkMinimalAccount__NotFromBootLoader();
         }
         _;
@@ -68,7 +68,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
 
         // check the fee
         uint256 totalRequiredBalance = _transaction.totalRequiredBalance();
-        if(totalRequiredBalance > address(this).balance){
+        if (totalRequiredBalance > address(this).balance) {
             revert ZkMinimalAccount__NotEnoughBalance();
         }
 
@@ -77,7 +77,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
         bytes32 convertedHash = MessageHashUtils.toEthSignedMessageHash(txHash);
         address signer = ECDSA.recover(convertedHash, _transaction.signature);
         bool isValidSigner = (signer == owner());
-        if(isValidSigner){
+        if (isValidSigner) {
             magic = ACCOUNT_VALIDATION_SUCCESS_MAGIC;
         } else {
             magic = bytes4(0);
