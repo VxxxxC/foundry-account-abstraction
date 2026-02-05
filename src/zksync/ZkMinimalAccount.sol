@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {IAccount, ACCOUNT_VALIDATION_SUCCESS_MAGIC} from "@era/contracts/interfaces/IAccount.sol";
 import {Transaction, MemoryTransactionHelper} from "@era/contracts/libraries/MemoryTransactionHelper.sol";
 import {SystemContractsCaller} from "@era/contracts/libraries/SystemContractsCaller.sol";
-import {NONCE_HOLDER_SYSTEM_CONTRACT} from "@era/contracts/Constants.sol";
+import {NONCE_HOLDER_SYSTEM_CONTRACT, BOOTLOADER_FORMAL_ADDRESS} from "@era/contracts/Constants.sol";
 import {INonceHolder} from "@era/contracts/interfaces/INonceHolder.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -13,7 +13,17 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract ZkMinimalAccount is IAccount, Ownable {
     using MemoryTransactionHelper for Transaction;
 
+    // COL: ERRORS
     error ZkMinimalAccount__NotEnoughBalance();
+    error ZkMinimalAccount__NotFromBootLoader();
+
+    // COL: MODIFIERS
+    modifier requireFromBootLoader(){
+        if(msg.sender != BOOTLOADER_FORMAL_ADDRESS){
+            revert ZkMinimalAccount__NotFromBootLoader();
+        }
+        _;
+    }
 
     constructor() Ownable(msg.sender) {}
 
@@ -44,6 +54,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction calldata _transaction)
         external
         payable
+        requireFromBootLoader
         returns (bytes4 magic)
     {
         // call nonce holder to increase the nonce
