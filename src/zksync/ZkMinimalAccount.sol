@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IAccount} from "@era/contracts/interfaces/IAccount.sol";
-import {Transaction} from "@era/contracts/libraries/MemoryTransactionHelper.sol";
+import {IAccount, ACCOUNT_VALIDATION_SUCCESS_MAGIC} from "@era/contracts/interfaces/IAccount.sol";
+import {Transaction, MemoryTransactionHelper} from "@era/contracts/libraries/MemoryTransactionHelper.sol";
 import {SystemContractsCaller} from "@era/contracts/libraries/SystemContractsCaller.sol";
 import {NONCE_HOLDER_SYSTEM_CONTRACT} from "@era/contracts/Constants.sol";
 import {INonceHolder} from "@era/contracts/interfaces/INonceHolder.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ZkMinimalAccount is IAccount {
+contract ZkMinimalAccount is IAccount, Ownable {
+    using MemoryTransactionHelper for Transaction;
+
+    error ZkMinimalAccount__NotEnoughBalance();
+
+    constructor() Ownable(msg.sender) {}
+
     /**
      * INFO: Account Abstraction Transaction flow on zkSync
      *
@@ -45,6 +54,25 @@ contract ZkMinimalAccount is IAccount {
             0,
             abi.encodeCall(INonceHolder.incrementMinNonceIfEquals, (_transaction.nonce))
         );
+
+        // check the fee
+        uint256 totalRequiredBalance = _transaction.totalRequiredBalance();
+        if(totalRequiredBalance > address(this).balance){
+            revert ZkMinimalAccount__NotEnoughBalance();
+        }
+
+        // check the signature
+        bytes32 txHash = _transaction.encodeHash();
+        bytes32 convertedHash = MessageHashUtils.toEthSignedMessageHash(txHash);
+        address signer = ECDSA.recover(convertedHash, _transaction.signature);
+        bool isValidSigner = (signer == owner());
+        if(isValidSigner){
+            magic = ACCOUNT_VALIDATION_SUCCESS_MAGIC;
+        } else {
+            magic = bytes4(0);
+        }
+        // return the magic value
+        return magic;
     }
 
     function executeTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction calldata _transaction)
