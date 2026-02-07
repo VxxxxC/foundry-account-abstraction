@@ -21,7 +21,13 @@ contract ZkMinimalAccountTest is Test {
 
     // COL: Helper Functions
 
-    function _createUnsignedTransaction(address from, uint8 transactionType, address to, uint256 value, bytes memory data) internal view returns(Transaction memory){
+    function _createUnsignedTransaction(
+        address from,
+        uint8 transactionType,
+        address to,
+        uint256 value,
+        bytes memory data
+    ) internal view returns (Transaction memory) {
         uint256 nonce = vm.getNonce(address(zkMinimalAccount));
         bytes32[] memory factoryDeps = new bytes32[](0);
         return Transaction({
@@ -50,14 +56,14 @@ contract ZkMinimalAccountTest is Test {
         uint256 value = 0;
         bytes memory functionData = abi.encodeWithSelector(ERC20Mock.mint.selector, address(zkMinimalAccount), AMOUNT);
 
-        Transaction memory transaction = _createUnsignedTransaction(address(zkMinimalAccount.owner()), 113, destination, value, functionData);
-        
+        Transaction memory transaction =
+            _createUnsignedTransaction(address(zkMinimalAccount.owner()), 113, destination, value, functionData);
+
         // act
         vm.prank(zkMinimalAccount.owner());
         zkMinimalAccount.executeTransaction(EMPTY_BYTES32, EMPTY_BYTES32, transaction);
 
         // assert
         assertEq(usdc.balanceOf(address(zkMinimalAccount)), AMOUNT);
-
     }
 }

@@ -43,7 +43,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
 
     constructor() Ownable(msg.sender) {}
 
-    receive()  external payable {}
+    receive() external payable {}
 
     /**
      * INFO: Account Abstraction Transaction flow on zkSync
@@ -69,7 +69,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
      * @notice must increase the nonce
      * @notice must validate the tx (check owner signed the tx)
      */
-    function validateTransaction(bytes32 , bytes32 , Transaction calldata _transaction)
+    function validateTransaction(bytes32, bytes32, Transaction calldata _transaction)
         external
         payable
         requireFromBootLoader
@@ -78,7 +78,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
         return _validateTransaction(_transaction);
     }
 
-    function executeTransaction(bytes32 , bytes32 , Transaction calldata _transaction)
+    function executeTransaction(bytes32, bytes32, Transaction calldata _transaction)
         external
         payable
         requireFromBootLoaderOrOwner
@@ -93,19 +93,14 @@ contract ZkMinimalAccount is IAccount, Ownable {
         _executeTransaction(_transaction);
     }
 
-    function payForTransaction(bytes32 , bytes32 , Transaction calldata _transaction)
-        external
-        payable
-    {
+    function payForTransaction(bytes32, bytes32, Transaction calldata _transaction) external payable {
         bool success = _transaction.payToTheBootloader();
         if (!success) {
             revert ZkMinimalAccount__FailedToPay();
         }
     }
 
-    function prepareForPaymaster(bytes32 , bytes32 , Transaction calldata _transaction)
-        external
-        payable {}
+    function prepareForPaymaster(bytes32, bytes32, Transaction calldata _transaction) external payable {}
 
     // COL: ***INTERNAL FUNCTIONS***/
 
