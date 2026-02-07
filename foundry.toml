@@ -4,7 +4,6 @@ out = "out"
 scripts = "script"
 libs = ["lib"]
 remappings = ["@openzeppelin/contracts=lib/openzeppelin-contracts/contracts", "@era/contracts=lib/foundry-era-contracts/src/system-contracts/contracts"]
-is-system = true
 via-ir = true
 optimizer = true
 optimizer_runs = 200
@@ -13,6 +12,4 @@ optimizer_runs = 200
 src = "src"
 libs = ["lib"]
 fallback_oz = true
-is_system = true
-mode = "3"
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
