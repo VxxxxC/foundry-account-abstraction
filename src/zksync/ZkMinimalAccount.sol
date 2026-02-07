@@ -24,6 +24,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
     error ZkMinimalAccount__NotFromBootLoader();
     error ZkMinimalAccount__NotFromBootLoaderOrOwner();
     error ZkMinimalAccount__ExecutionFailed();
+    error ZkMinimalAccount__FailedToPay();
 
     // COL: MODIFIERS
     modifier requireFromBootLoader() {
@@ -42,6 +43,8 @@ contract ZkMinimalAccount is IAccount, Ownable {
 
     constructor() Ownable(msg.sender) {}
 
+    receive()  external payable {}
+
     /**
      * INFO: Account Abstraction Transaction flow on zkSync
      *
@@ -56,22 +59,57 @@ contract ZkMinimalAccount is IAccount, Ownable {
      *  - e. zkSync API client call payForTransaction, or prepareForPaymaster & validateAnyPayForPaymasterTransaction if a paymaster is used
      *
      * Phase 2 : Execution
-     *  - f. zkSync API client pass validated transacion to main node / sequencer ( For now they are the same )
+     *  - f. zkSync API client pass validated transaction to main node / sequencer ( For now they are the same )
      *  - g. The main node / sequencer call executeTransaction
      *  - h. If paymaster used, the postTransaction handler of the paymaster is called
      *
      */
-    // NOTE: ***EXTERNAL FUNCTIONS***/
+    // COL: ***EXTERNAL FUNCTIONS***/
     /**
      * @notice must increase the nonce
      * @notice must validate the tx (check owner signed the tx)
      */
-    function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction calldata _transaction)
+    function validateTransaction(bytes32 , bytes32 , Transaction calldata _transaction)
         external
         payable
         requireFromBootLoader
         returns (bytes4 magic)
     {
+        return _validateTransaction(_transaction);
+    }
+
+    function executeTransaction(bytes32 , bytes32 , Transaction calldata _transaction)
+        external
+        payable
+        requireFromBootLoaderOrOwner
+    {
+        _executeTransaction(_transaction);
+    }
+
+    // There is no point in providing possible signed hash in the `executeTransactionFromOutside` method,
+    // since it typically should not be trusted.
+    function executeTransactionFromOutside(Transaction calldata _transaction) external payable {
+        _validateTransaction(_transaction);
+        _executeTransaction(_transaction);
+    }
+
+    function payForTransaction(bytes32 , bytes32 , Transaction calldata _transaction)
+        external
+        payable
+    {
+        bool success = _transaction.payToTheBootloader();
+        if (!success) {
+            revert ZkMinimalAccount__FailedToPay();
+        }
+    }
+
+    function prepareForPaymaster(bytes32 , bytes32 , Transaction calldata _transaction)
+        external
+        payable {}
+
+    // COL: ***INTERNAL FUNCTIONS***/
+
+    function _validateTransaction(Transaction memory _transaction) internal returns (bytes4 magic) {
         // call nonce holder to increase the nonce
         // call (x, y, z) -> system contract
         SystemContractsCaller.systemCallWithPropagatedRevert(
@@ -101,11 +139,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
         return magic;
     }
 
-    function executeTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction calldata _transaction)
-        external
-        payable
-        requireFromBootLoaderOrOwner
-    {
+    function _executeTransaction(Transaction memory _transaction) internal {
         address to = address(uint160(_transaction.to));
         uint128 value = Utils.safeCastToU128(_transaction.value);
         bytes memory data = _transaction.data;
@@ -123,16 +157,4 @@ contract ZkMinimalAccount is IAccount, Ownable {
             }
         }
     }
-
-    // There is no point in providing possible signed hash in the `executeTransactionFromOutside` method,
-    // since it typically should not be trusted.
-    function executeTransactionFromOutside(Transaction calldata _transaction) external payable {}
-
-    function payForTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction calldata _transaction)
-        external
-        payable {}
-
-    function prepareForPaymaster(bytes32 _txHash, bytes32 _possibleSignedHash, Transaction calldata _transaction)
-        external
-        payable {}
 }
